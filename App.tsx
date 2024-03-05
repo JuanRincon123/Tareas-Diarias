@@ -1,107 +1,104 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
 import {
-  TextInput,
-  StyleSheet,
   Text,
   View,
+  TextInput,
   TouchableOpacity,
-  Dimensions,
   FlatList,
-} from "react-native";
+} from 'react-native';
+import styles from './Styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import RenderItem from './src/components/RenderItem';
 
-function App() {
-  function renderItem({ item }: { item: Task }) {
-    return (
-      <View style={styles.itemcontainer}>
-        <Text style={styles.text}>{item.title}</Text>
-      </View>
-    );
-  }
+export interface Task {
+  title: string;
+  done: boolean;
+  date: Date;
+}
+
+export default function App() {
+  const [text, setText] = useState('');
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  const storeData = async (value: Task[]) => {
+    try {
+      await AsyncStorage.setItem('mytodo-tasks', JSON.stringify(value));
+    } catch (e) {
+      // saving error
+    }
+  };
+
+  const getData = async () => {
+    try {
+      const value = await AsyncStorage.getItem('mytodo-tasks');
+      if (value !== null) {
+        const tasksLocal = JSON.parse(value); 
+        setTasks(tasksLocal)
+      }
+    } catch (e) {
+      // error reading value
+    }
+  };
+
+  useEffect(()=>{
+    getData();
+  },[])
+
+  const addTask = () => {
+    const tmp = [...tasks];
+    const newTask = {
+      title: text,
+      done: false,
+      date: new Date(),
+    };
+    tmp.push(newTask);
+    setTasks(tmp);
+    storeData(tmp);
+    setText('');
+  };
+
+  const markDone = (task: Task) => {
+    const tmp = [...tasks];
+    const index = tmp.findIndex(el => el.title === task.title);
+    const todo = tasks[index];
+    todo.done = !todo.done;
+    setTasks(tmp);
+    storeData(tmp);
+  };
+
+  const deleteFunction = (task: Task) => { 
+  const tmp = [...tasks];
+  const index = tmp.findIndex(el => el.title === task.title)
+  tmp.splice(index,1);
+  setTasks(tmp);
+  storeData(tmp);
+  };
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Mis tareas por hacer</Text>
+      <Text style={styles.title}>Mis Tareas por realizar</Text>
       <View style={styles.inputContainer}>
         <TextInput
-          placeholder="Agregar una nueva tarea"
-          style={styles.textInput}
+          placeholder='Agrega una nueva tarea'
+          onChangeText={(t: string) => setText(t)}
+          value={text}
+          style={styles.textIpunt}
         />
-        <TouchableOpacity style={styles.addButton}>
-          <Text>Agregar</Text>
+        <TouchableOpacity style={styles.addButton} onPress={addTask}>
+          <Text style={styles.whiteText}>Agregar</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.scrollContainer}>
-        <FlatList data={Tasks} renderItem={renderItem} />
+        <FlatList
+          data={tasks}
+          renderItem={({ item }) => (
+            <RenderItem
+              item={item}
+              deleteFunction={deleteFunction}
+              markDone={markDone}
+            />
+          )}
+        />
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-    padding: 20,
-  },
-  title: {
-    fontSize: 20,
-    color: "#6f6f6f",
-  },
-  text: {
-    fontSize: 16,
-    color: "#6f6f6f",
-  },
-  whiteText: {
-    fontSize: 16,
-    color: "#fff",
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: "#6f6f6f",
-    borderRadius: 10,
-    padding: 10,
-    width: Dimensions.get("screen").width * 0.17,
-  },
-  inputContainer: {
-    marginTop: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  addButton: {
-    width: Dimensions.get("screen").width * 0.06,
-    backgroundColor: "#5897fb",
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scrollContainer: {},
-  itemcontainer: {
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#6f6f6f",
-  },
-});
-
-const Tasks = [
-  {
-    title: "Programar una app",
-    done: false,
-    Date: new Date(),
-  },
-  {
-    title: "Estudiar react native",
-    done: false,
-    Date: new Date(),
-  },
-  {
-    title: "Trabajar como programador",
-    done: false,
-    Date: new Date(),
-  },
-];
-
-interface Task {
-  title: string;
-  done: boolean;
-  Date: Date;
-}
-
-export default App;
