@@ -6,9 +6,17 @@ import {
   View,
   TouchableOpacity,
   Dimensions,
+  FlatList,
 } from "react-native";
 
 function App() {
+  function renderItem({ item }: { item: Task }) {
+    return (
+      <View style={styles.itemcontainer}>
+        <Text style={styles.text}>{item.title}</Text>
+      </View>
+    );
+  }
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Mis tareas por hacer</Text>
@@ -20,6 +28,9 @@ function App() {
         <TouchableOpacity style={styles.addButton}>
           <Text>Agregar</Text>
         </TouchableOpacity>
+      </View>
+      <View style={styles.scrollContainer}>
+        <FlatList data={Tasks} renderItem={renderItem} />
       </View>
     </View>
   );
@@ -47,7 +58,7 @@ const styles = StyleSheet.create({
     borderColor: "#6f6f6f",
     borderRadius: 10,
     padding: 10,
-    width: Dimensions.get("screen").width * 0.2,
+    width: Dimensions.get("screen").width * 0.17,
   },
   inputContainer: {
     marginTop: 20,
@@ -61,6 +72,36 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  scrollContainer: {},
+  itemcontainer: {
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#6f6f6f",
+  },
 });
+
+const Tasks = [
+  {
+    title: "Programar una app",
+    done: false,
+    Date: new Date(),
+  },
+  {
+    title: "Estudiar react native",
+    done: false,
+    Date: new Date(),
+  },
+  {
+    title: "Trabajar como programador",
+    done: false,
+    Date: new Date(),
+  },
+];
+
+interface Task {
+  title: string;
+  done: boolean;
+  Date: Date;
+}
 
 export default App;
